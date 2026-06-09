@@ -1,0 +1,152 @@
+package com.dio.desafio.designpatterns;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@SpringBootApplication
+public class DesafioDesignPatternsApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DesafioDesignPatternsApplication.class, args);
+    }
+}
+
+/*
+========================================================
+🧠 STRATEGY - Cada tipo de frete tem sua própria regra
+========================================================
+*/
+interface EstrategiaFrete {
+    double calcular(double peso);
+}
+
+/*
+Frete normal: cálculo simples baseado no peso
+*/
+@Component("NORMAL")
+class FreteNormal implements EstrategiaFrete {
+    @Override
+    public double calcular(double peso) {
+        return peso * 5.0;
+    }
+}
+
+/*
+Frete expresso: mais caro + taxa fixa
+*/
+@Component("EXPRESSO")
+class FreteExpresso implements EstrategiaFrete {
+    @Override
+    public double calcular(double peso) {
+        return (peso * 10.0) + 15.0;
+    }
+}
+
+/*
+====================================================
+🏭 FACTORY - Decide qual estratégia usar (sem if)
+====================================================
+*/
+@Component
+class FreteFactory {
+
+    private final Map<String, EstrategiaFrete> estrategias;
+
+    // O Spring injeta automaticamente todas as estratégias aqui
+    public FreteFactory(Map<String, EstrategiaFrete> estrategias) {
+        this.estrategias = estrategias;
+    }
+
+    public EstrategiaFrete obterEstrategia(String tipo) {
+        // Se não encontrar, usa NORMAL como padrão
+        return estrategias.getOrDefault(tipo.toUpperCase(), estrategias.get("NORMAL"));
+    }
+}
+
+/*
+================================================
+🧩 FACADE - Esconde a complexidade do sistema
+================================================
+*/
+@Component
+class PedidoFacade {
+
+    private final FreteFactory freteFactory;
+
+    public PedidoFacade(FreteFactory freteFactory) {
+        this.freteFactory = freteFactory;
+    }
+
+    public double fecharPedido(double peso, String tipoFrete) {
+        EstrategiaFrete estrategia = freteFactory.obterEstrategia(tipoFrete);
+        return estrategia.calcular(peso);
+    }
+}
+
+/*
+===================================
+⚙️ SERVICE - Regra de negócio
+===================================
+*/
+@Service
+class LojaService {
+
+    private final PedidoFacade pedidoFacade;
+
+    public LojaService(PedidoFacade pedidoFacade) {
+        this.pedidoFacade = pedidoFacade;
+    }
+
+    public double processarCompra(double peso, String tipoFrete) {
+        return pedidoFacade.fecharPedido(peso, tipoFrete);
+    }
+}
+
+/*
+=======================================
+📦 DTO - Objeto de resposta da API
+======================================
+*/
+class FreteResponse {
+
+    private double valor;
+
+    public FreteResponse(double valor) {
+        this.valor = valor;
+    }
+
+    public double getValor() {
+        return valor;
+    }
+}
+
+/*
+============================================
+🌐 CONTROLLER - Entrada da API
+============================================
+*/
+@RestController
+@RequestMapping("/api/pedidos")
+class PedidoController {
+
+    private final LojaService lojaService;
+
+    public PedidoController(LojaService lojaService) {
+        this.lojaService = lojaService;
+    }
+
+    @GetMapping("/calcular-total")
+    public ResponseEntity<FreteResponse> calcularTotal(
+            @RequestParam double peso,
+            @RequestParam String frete) {
+
+        double valor = lojaService.processarCompra(peso, frete);
+        return ResponseEntity.ok(new FreteResponse(valor));
+    }
+}
