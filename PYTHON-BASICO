@@ -1,0 +1,63 @@
+print("Iniciando programa...\n")
+
+Variáveis
+
+nome = ""
+idade = 0
+
+print("Nome:", nome)
+print("Idade:", idade)
+
+Condicional
+
+if idade >= 18:
+print("Você é maior de idade")
+else:
+print("Você é menor de idade")
+
+Loop for
+
+print("Contando de 1 até 5:")
+for i in range(1, 6):
+print(i)
+
+Loop while
+
+print("Contando com while:")
+contador = 1
+
+while contador <= 5:
+print(contador)
+contador += 1
+
+Função
+
+def mensagem(nome):
+print(f"\nOlá, {nome}! Bem-vindo.")
+
+mensagem(nome)
+
+Lista
+
+numeros = [10, 20, 30]
+
+print("\nLista de números:")
+for n in numeros:
+print(n)
+
+Entrada de dados
+
+print("\nCadastro simples:")
+
+usuario = input("Digite seu nome: ")
+idade_usuario = int(input("Digite sua idade: "))
+
+print("\nNome:", usuario)
+print("Idade:", idade_usuario)
+
+if idade_usuario >= 18:
+print("Maior de idade")
+else:
+print("Menor de idade")
+
+print("\nPrograma finalizado.")
